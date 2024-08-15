@@ -17,7 +17,7 @@ class PostController extends Controller
     {
         $posts = Post::all();
         // return response()->json(['data' => $posts]);
-        return PostDetailResource::collection($posts->loadMissing('writer:id,username'));
+        return PostDetailResource::collection($posts->loadMissing('writer:id,username,email'));
     }
 
     /**
@@ -46,19 +46,20 @@ class PostController extends Controller
         return new PostDetailResource($post);
     }
 
-    // public function show2(string $id)
-    // {
-    //     $post = Post::findOrFail($id);
-    //     // return response()->json(['data' => $post]);
-    //     return new PostDetailResource($post);
-    // }
-
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
     {
-        //
+        $validated = $request->validate([
+            'title' => 'required|max:255',
+            'content' => 'required',
+        ]);
+
+        $post = Post::findOrFail($id);
+        $post->update($request->all());
+
+        return new PostDetailResource($post->loadMissing('writer:id,username,email'));
     }
 
     /**
@@ -66,6 +67,9 @@ class PostController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $post = Post::findOrFail($id);
+        $post->delete();
+
+        return new PostDetailResource($post->loadMissing('writer:id,username,email'));
     }
 }
