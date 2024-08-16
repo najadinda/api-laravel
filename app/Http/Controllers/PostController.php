@@ -17,7 +17,7 @@ class PostController extends Controller
     {
         $posts = Post::all();
         // return response()->json(['data' => $posts]);
-        return PostDetailResource::collection($posts->loadMissing('writer:id,username,email'));
+        return PostDetailResource::collection($posts->loadMissing(['writer:id,username,email', 'comments:id,post_id,user_id,comment']));
     }
 
     /**
@@ -33,7 +33,11 @@ class PostController extends Controller
 
         $request['author'] = Auth::user()->id;
         $post = Post::create($request->all());
-        return new PostDetailResource($post->loadMissing('writer:id,username,email'));
+
+        return response()->json([
+            'message' => 'Post successfully created.',
+            'data' => new PostDetailResource($post->loadMissing('writer:id,username,email'))
+        ]);
     }
 
     /**
@@ -43,7 +47,7 @@ class PostController extends Controller
     {
         $post = Post::with('writer:id,username,email')->findOrFail($id);
         // return response()->json(['data' => $post]);
-        return new PostDetailResource($post);
+        return new PostDetailResource($post->loadMissing(['writer:id,username,email', 'comments:id,post_id,user_id,comment']));
     }
 
     /**
@@ -59,7 +63,10 @@ class PostController extends Controller
         $post = Post::findOrFail($id);
         $post->update($request->all());
 
-        return new PostDetailResource($post->loadMissing('writer:id,username,email'));
+        return response()->json([
+            'message' => 'Post successfully update.',
+            'data' => new PostDetailResource($post->loadMissing(['writer:id,username,email', 'comment']))
+        ]);
     }
 
     /**
@@ -70,6 +77,9 @@ class PostController extends Controller
         $post = Post::findOrFail($id);
         $post->delete();
 
-        return new PostDetailResource($post->loadMissing('writer:id,username,email'));
+        return response()->json([
+            'message' => 'Post successfully soft deleted.',
+            'data' => new PostDetailResource($post->loadMissing('writer:id,username,email'))
+        ]);
     }
 }

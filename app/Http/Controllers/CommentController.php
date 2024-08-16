@@ -30,7 +30,10 @@ class CommentController extends Controller
 
         $comment = Comment::create($request->all());
 
-        return new CommentResource($comment->loadMissing(['commentator:id,username']));
+        return response()->json([
+            'message' => 'Comment successfully created.',
+            'data' => new CommentResource($comment->loadMissing(['commentator:id,username']))
+        ]);
     }
 
     /**
@@ -46,7 +49,17 @@ class CommentController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        
+        $validated = $request->validate([
+            'comment' => 'required',
+        ]);
+
+        $comment = Comment::findOrFail($id);
+        $comment->update($request->only('comment'));
+
+        return response()->json([
+            'message' => 'Comment successfully updated.',
+            'data' => new CommentResource($comment->loadMissing(['commentator:id,username']))
+        ]);
     }
 
     /**
@@ -54,6 +67,12 @@ class CommentController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $comment = Comment::findOrFail($id);
+        $comment->delete();
+
+        return response()->json([
+            'message' => 'Comment successfully soft deleted.',
+            'data' => new CommentResource($comment->loadMissing(['commentator:id,username']))
+        ]);
     }
 }
